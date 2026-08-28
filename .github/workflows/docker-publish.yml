@@ -109,7 +109,6 @@ jobs:
       - name: Reclaim runner disk space before NVIDIA build
         run: |
           set -euo pipefail
-          rm -rf model-bundles/active
           docker buildx prune --all --force
           docker system prune --all --force --volumes
           df -h
