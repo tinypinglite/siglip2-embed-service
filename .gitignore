@@ -7,3 +7,4 @@ runtime-cache/
 runtime-cache-*/
 model-bundles/
 src/siglip2_embed/_webp_decode.so
+src/siglip2_embed/_jpeg_decode.so

@@ -11,6 +11,7 @@ import numpy as np
 from transformers import AutoConfig, AutoImageProcessor, AutoTokenizer
 from transformers.image_utils import ChannelDimension
 
+from .jpeg import JPEGDecodeError, decode_jpeg_rgb
 from .settings import Settings
 from .webp import WebPDecodeError, decode_webp_rgb
 
@@ -224,12 +225,25 @@ class EmbeddingService:
 
 
 def _decode_image(payload: bytes, max_pixels: int) -> np.ndarray:
-    try:
-        return decode_webp_rgb(
-            payload,
-            max_pixels=max_pixels,
-            width=MODEL_IMAGE_SIZE,
-            height=MODEL_IMAGE_SIZE,
-        )
-    except WebPDecodeError as error:
-        raise InputError(str(error)) from error
+    if len(payload) >= 12 and payload[:4] == b"RIFF" and payload[8:12] == b"WEBP":
+        try:
+            return decode_webp_rgb(
+                payload,
+                max_pixels=max_pixels,
+                width=MODEL_IMAGE_SIZE,
+                height=MODEL_IMAGE_SIZE,
+            )
+        except WebPDecodeError as error:
+            raise InputError(str(error)) from error
+    if len(payload) >= 2 and payload[:2] == b"\xff\xd8":
+        try:
+            return decode_jpeg_rgb(
+                payload,
+                max_pixels=max_pixels,
+                width=MODEL_IMAGE_SIZE,
+                height=MODEL_IMAGE_SIZE,
+            )
+        except JPEGDecodeError as error:
+            raise InputError(str(error)) from error
+
+    raise InputError("only WebP and JPEG images are supported")

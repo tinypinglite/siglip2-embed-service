@@ -8,6 +8,7 @@ import pytest
 from PIL import Image
 from transformers.image_utils import ChannelDimension
 
+import siglip2_embed.jpeg as jpeg
 from siglip2_embed.runtime import (
     EmbeddingService,
     InputError,
@@ -132,11 +133,11 @@ def test_decode_image_rejects_source_above_pixel_limit() -> None:
         _decode_image(payload.getvalue(), max_pixels=39)
 
 
-def test_decode_image_rejects_non_webp_input() -> None:
+def test_decode_image_rejects_unsupported_input() -> None:
     payload = BytesIO()
     Image.new("RGB", (8, 5), (0, 0, 0)).save(payload, format="PNG")
 
-    with pytest.raises(InputError, match="only WebP images are supported"):
+    with pytest.raises(InputError, match="only WebP and JPEG images are supported"):
         _decode_image(payload.getvalue(), max_pixels=40)
 
 
@@ -166,6 +167,68 @@ def test_decode_image_scales_wide_webp_to_model_input(lossless: bool) -> None:
 
     assert image.shape == (224, 224, 3)
     np.testing.assert_allclose(image[112, 112], [12, 34, 56], atol=2)
+
+
+@pytest.mark.parametrize("progressive", [False, True])
+def test_decode_image_accepts_jpeg(progressive: bool) -> None:
+    payload = BytesIO()
+    Image.new("RGB", (80, 50), (12, 34, 56)).save(
+        payload,
+        format="JPEG",
+        progressive=progressive,
+        quality=95,
+    )
+
+    image = _decode_image(payload.getvalue(), max_pixels=4_000)
+
+    assert image.shape == (224, 224, 3)
+    np.testing.assert_allclose(image[112, 112], [12, 34, 56], atol=4)
+
+
+def test_decode_image_bounds_jpeg_intermediate(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    payload = BytesIO()
+    Image.new("RGB", (2_000, 2_000), (12, 34, 56)).save(payload, format="JPEG")
+    original_fromarray = jpeg.Image.fromarray
+    observed: dict[str, tuple[int, ...]] = {}
+
+    def record_intermediate(pixels: np.ndarray):
+        observed["shape"] = pixels.shape
+        return original_fromarray(pixels)
+
+    monkeypatch.setattr(jpeg.Image, "fromarray", record_intermediate)
+
+    image = _decode_image(payload.getvalue(), max_pixels=4_000_000)
+
+    assert image.shape == (224, 224, 3)
+    intermediate_shape = observed["shape"]
+    assert intermediate_shape[0] * intermediate_shape[1] <= jpeg.MAX_JPEG_DECODE_PIXELS
+
+
+def test_decode_image_rejects_jpeg_above_pixel_limit() -> None:
+    payload = BytesIO()
+    Image.new("RGB", (8, 5), (0, 0, 0)).save(payload, format="JPEG")
+
+    with pytest.raises(InputError, match="image exceeds the 39-pixel limit"):
+        _decode_image(payload.getvalue(), max_pixels=39)
+
+
+def test_decode_image_bounds_progressive_jpeg_memory(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    payload = BytesIO()
+    Image.new("RGB", (8, 5), (0, 0, 0)).save(
+        payload,
+        format="JPEG",
+        progressive=True,
+    )
+    monkeypatch.setattr(jpeg, "MAX_PROGRESSIVE_JPEG_PIXELS", 39)
+
+    with pytest.raises(
+        InputError, match="progressive JPEG exceeds the 39-pixel memory safety limit"
+    ):
+        _decode_image(payload.getvalue(), max_pixels=40)
 
 
 def test_image_preparation_honors_cpu_concurrency() -> None:

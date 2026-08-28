@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 MODEL_PATH = Path("/opt/siglip2")
-EMBEDDING_SPACE_ID = "siglip2-base-patch16-224-webp-v2"
+EMBEDDING_SPACE_ID = "siglip2-base-patch16-224-v3"
 VALID_BACKENDS = {"cpu", "cuda", "intel_gpu"}
 
 
