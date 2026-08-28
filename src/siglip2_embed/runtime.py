@@ -3,17 +3,19 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
-from io import BytesIO
 from pathlib import Path
 from threading import Lock
 from typing import Protocol
 
 import numpy as np
-from PIL import Image, UnidentifiedImageError
 from transformers import AutoConfig, AutoImageProcessor, AutoTokenizer
 from transformers.image_utils import ChannelDimension
 
 from .settings import Settings
+from .webp import WebPDecodeError, decode_webp_rgb
+
+
+MODEL_IMAGE_SIZE = 224
 
 
 class InputError(ValueError):
@@ -25,7 +27,7 @@ class Backend(Protocol):
 
     def embed_texts(self, tokens: dict[str, np.ndarray]) -> np.ndarray: ...
 
-    def prepare_image(self, image: Image.Image) -> np.ndarray: ...
+    def prepare_image(self, image: np.ndarray) -> np.ndarray: ...
 
     def prepare_texts(self, texts: list[str]) -> dict[str, np.ndarray]: ...
 
@@ -47,10 +49,11 @@ class _BaseBackend:
         config = AutoConfig.from_pretrained(model_path, local_files_only=True)
         self.text_length = int(config.text_config.max_position_embeddings)
 
-    def prepare_image(self, image: Image.Image) -> np.ndarray:
+    def prepare_image(self, image: np.ndarray) -> np.ndarray:
         return np.asarray(
             self.image_processor(
                 images=[image],
+                do_resize=False,
                 return_tensors="np",
                 input_data_format=ChannelDimension.LAST,
             )["pixel_values"]
@@ -201,8 +204,7 @@ class EmbeddingService:
         self.settings = settings
         self.backend = load_backend(settings)
         self._cpu_pool = ThreadPoolExecutor(max_workers=settings.cpu_concurrency)
-        self._image_prepare_lock = Lock()
-        self._processor_lock = Lock()
+        self._text_prepare_lock = Lock()
         self._inference_lock = Lock()
 
     def embed_images(self, payloads: list[bytes]) -> np.ndarray:
@@ -211,30 +213,23 @@ class EmbeddingService:
             return self.backend.embed_images(prepared)
 
     def embed_texts(self, texts: list[str]) -> np.ndarray:
-        with self._processor_lock:
+        with self._text_prepare_lock:
             tokens = self.backend.prepare_texts(texts)
         with self._inference_lock:
             return self.backend.embed_texts(tokens)
 
     def _prepare_one_image(self, payload: bytes) -> np.ndarray:
-        # A decoded 8K image is hundreds of MiB. Keep the full decode and
-        # processor conversion serial even if callers configure CPU workers.
-        with self._image_prepare_lock:
-            image = _decode_image(payload, self.settings.max_image_pixels)
-            try:
-                with self._processor_lock:
-                    return self.backend.prepare_image(image)
-            finally:
-                image.close()
+        image = _decode_image(payload, self.settings.max_image_pixels)
+        return self.backend.prepare_image(image)
 
 
-def _decode_image(payload: bytes, max_pixels: int) -> Image.Image:
+def _decode_image(payload: bytes, max_pixels: int) -> np.ndarray:
     try:
-        with Image.open(BytesIO(payload)) as source:
-            width, height = source.size
-            if width * height > max_pixels:
-                raise InputError(f"image exceeds the {max_pixels}-pixel limit")
-            source.load()
-            return source.convert("RGB")
-    except (UnidentifiedImageError, OSError) as error:
-        raise InputError("invalid or unreadable image") from error
+        return decode_webp_rgb(
+            payload,
+            max_pixels=max_pixels,
+            width=MODEL_IMAGE_SIZE,
+            height=MODEL_IMAGE_SIZE,
+        )
+    except WebPDecodeError as error:
+        raise InputError(str(error)) from error

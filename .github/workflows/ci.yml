@@ -26,6 +26,12 @@ jobs:
       - name: Install locked CPU runtime dependencies
         run: uv sync --frozen --extra cpu --group dev
 
+      - name: Build native WebP decoder
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebp-dev
+          sh tools/build_webp_decoder.sh
+
       - name: Compile source, tests, and one-time export tools
         run: uv run --frozen python -m compileall -q src tests tools
 

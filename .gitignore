@@ -6,3 +6,4 @@ __pycache__/
 runtime-cache/
 runtime-cache-*/
 model-bundles/
+src/siglip2_embed/_webp_decode.so

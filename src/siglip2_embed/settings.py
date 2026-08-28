@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 MODEL_PATH = Path("/opt/siglip2")
-EMBEDDING_SPACE_ID = "siglip2-base-patch16-224-v1"
+EMBEDDING_SPACE_ID = "siglip2-base-patch16-224-webp-v2"
 VALID_BACKENDS = {"cpu", "cuda", "intel_gpu"}
 
 
@@ -50,6 +50,6 @@ class Settings:
             max_image_bytes=max_image_bytes,
             max_request_bytes=max_request_bytes,
             # This is a source-image safety ceiling, not the model input size.
-            # The bundled image processor resizes accepted images to 224x224.
+            # Static WebP inputs are decoded directly to the 224x224 model size.
             max_image_pixels=_positive_int("MAX_IMAGE_PIXELS", 40_000_000),
         )
