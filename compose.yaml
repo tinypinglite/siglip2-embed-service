@@ -1,0 +1,44 @@
+services:
+  embed-cpu:
+    profiles: ["cpu"]
+    image: tinyping/siglip2-embed-service:cpu
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8080}:8080"
+    environment:
+      EMBEDDING_BACKEND: cpu
+      CPU_CONCURRENCY: "${CPU_CONCURRENCY:-1}"
+    networks:
+      default:
+        aliases: ["siglip2-embed"]
+
+  embed-intel:
+    profiles: ["intel"]
+    image: tinyping/siglip2-embed-service:intel
+    restart: unless-stopped
+    devices:
+      - /dev/dri:/dev/dri
+    group_add:
+      - "${RENDER_GID:-0}"
+    ports:
+      - "${PORT:-8080}:8080"
+    environment:
+      EMBEDDING_BACKEND: intel_gpu
+      CPU_CONCURRENCY: "${CPU_CONCURRENCY:-1}"
+    networks:
+      default:
+        aliases: ["siglip2-embed"]
+
+  embed-cuda:
+    profiles: ["cuda"]
+    image: tinyping/siglip2-embed-service:cuda
+    restart: unless-stopped
+    gpus: all
+    ports:
+      - "${PORT:-8080}:8080"
+    environment:
+      EMBEDDING_BACKEND: cuda
+      CPU_CONCURRENCY: "${CPU_CONCURRENCY:-1}"
+    networks:
+      default:
+        aliases: ["siglip2-embed"]

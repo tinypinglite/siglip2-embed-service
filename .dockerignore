@@ -1,0 +1,14 @@
+.git/
+.github/
+.pytest_cache/
+.ruff_cache/
+.venv/
+__pycache__/
+*.py[cod]
+runtime-cache/
+runtime-cache-*/
+experiments/
+.model-release/
+model-bundles/*
+!model-bundles/active/
+!model-bundles/active/**
