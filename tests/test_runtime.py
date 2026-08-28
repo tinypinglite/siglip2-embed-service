@@ -5,7 +5,7 @@ import pytest
 from PIL import Image
 from transformers.image_utils import ChannelDimension
 
-from siglip2_embed.runtime import OnnxBackend, OpenVinoBackend, _decode_image
+from siglip2_embed.runtime import InputError, OnnxBackend, OpenVinoBackend, _decode_image
 from siglip2_embed.settings import EMBEDDING_SPACE_ID, MODEL_PATH, Settings
 
 
@@ -80,3 +80,31 @@ def test_settings_fix_the_model_identity(monkeypatch: pytest.MonkeyPatch) -> Non
 
     assert settings.model_path == MODEL_PATH
     assert settings.embedding_space_id == EMBEDDING_SPACE_ID
+
+
+def test_settings_accept_common_8k_source_images_by_default(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("MAX_IMAGE_PIXELS", raising=False)
+
+    settings = Settings.from_env()
+
+    assert settings.max_image_pixels == 40_000_000
+    assert settings.max_image_pixels >= 8192 * 4096
+
+
+def test_decode_image_accepts_source_at_pixel_limit() -> None:
+    payload = BytesIO()
+    Image.new("RGB", (8, 5), (0, 0, 0)).save(payload, format="PNG")
+
+    image = _decode_image(payload.getvalue(), max_pixels=40)
+
+    assert image.size == (8, 5)
+
+
+def test_decode_image_rejects_source_above_pixel_limit() -> None:
+    payload = BytesIO()
+    Image.new("RGB", (8, 5), (0, 0, 0)).save(payload, format="PNG")
+
+    with pytest.raises(InputError, match="image exceeds the 39-pixel limit"):
+        _decode_image(payload.getvalue(), max_pixels=39)

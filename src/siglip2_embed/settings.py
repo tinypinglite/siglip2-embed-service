@@ -49,5 +49,7 @@ class Settings:
             cpu_concurrency=_positive_int("CPU_CONCURRENCY", 1),
             max_image_bytes=max_image_bytes,
             max_request_bytes=max_request_bytes,
-            max_image_pixels=_positive_int("MAX_IMAGE_PIXELS", 16_000_000),
+            # This is a source-image safety ceiling, not the model input size.
+            # The bundled image processor resizes accepted images to 224x224.
+            max_image_pixels=_positive_int("MAX_IMAGE_PIXELS", 40_000_000),
         )

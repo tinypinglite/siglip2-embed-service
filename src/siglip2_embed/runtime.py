@@ -201,6 +201,7 @@ class EmbeddingService:
         self.settings = settings
         self.backend = load_backend(settings)
         self._cpu_pool = ThreadPoolExecutor(max_workers=settings.cpu_concurrency)
+        self._image_prepare_lock = Lock()
         self._processor_lock = Lock()
         self._inference_lock = Lock()
 
@@ -216,12 +217,15 @@ class EmbeddingService:
             return self.backend.embed_texts(tokens)
 
     def _prepare_one_image(self, payload: bytes) -> np.ndarray:
-        image = _decode_image(payload, self.settings.max_image_pixels)
-        try:
-            with self._processor_lock:
-                return self.backend.prepare_image(image)
-        finally:
-            image.close()
+        # A decoded 8K image is hundreds of MiB. Keep the full decode and
+        # processor conversion serial even if callers configure CPU workers.
+        with self._image_prepare_lock:
+            image = _decode_image(payload, self.settings.max_image_pixels)
+            try:
+                with self._processor_lock:
+                    return self.backend.prepare_image(image)
+            finally:
+                image.close()
 
 
 def _decode_image(payload: bytes, max_pixels: int) -> Image.Image:
