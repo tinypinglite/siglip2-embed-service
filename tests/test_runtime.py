@@ -19,6 +19,20 @@ class _RecordingImageProcessor:
         return {"pixel_values": self.pixel_values}
 
 
+class _RecordingTokenizer:
+    eos_token_id = 1
+
+    def __init__(self) -> None:
+        self.kwargs: dict[str, object] | None = None
+
+    def __call__(self, texts: list[str], **kwargs: object) -> dict[str, np.ndarray]:
+        self.kwargs = kwargs
+        return {
+            "input_ids": np.array([[42, 1, 0, 0], [43, 44, 1, 0]], dtype=np.int64),
+            "attention_mask": np.array([[1, 1, 0, 0], [1, 1, 1, 0]], dtype=np.int64),
+        }
+
+
 @pytest.mark.parametrize("backend_type", [OnnxBackend, OpenVinoBackend])
 def test_prepare_image_declares_channels_last_for_tiny_rgb_image(backend_type: type) -> None:
     payload = BytesIO()
@@ -34,6 +48,29 @@ def test_prepare_image_declares_channels_last_for_tiny_rgb_image(backend_type: t
         "return_tensors": "np",
         "input_data_format": ChannelDimension.LAST,
     }
+
+
+@pytest.mark.parametrize("backend_type", [OnnxBackend, OpenVinoBackend])
+def test_prepare_texts_uses_sticky_eos(backend_type: type) -> None:
+    tokenizer = _RecordingTokenizer()
+    backend = object.__new__(backend_type)
+    backend.tokenizer = tokenizer
+    backend.text_length = 64
+
+    result = backend.prepare_texts(["first", "second"])
+
+    assert tokenizer.kwargs == {
+        "padding": "max_length",
+        "max_length": 64,
+        "truncation": True,
+        "return_attention_mask": True,
+        "return_tensors": "np",
+    }
+    np.testing.assert_array_equal(
+        result["input_ids"],
+        np.array([[42, 1, 1, 1], [43, 44, 1, 1]], dtype=np.int64),
+    )
+    np.testing.assert_array_equal(result["attention_mask"], np.ones((2, 4), dtype=np.int64))
 
 
 def test_settings_fix_the_model_identity(monkeypatch: pytest.MonkeyPatch) -> None:

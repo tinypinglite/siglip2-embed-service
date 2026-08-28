@@ -65,7 +65,18 @@ class _BaseBackend:
             return_attention_mask=True,
             return_tensors="np",
         )
-        return {name: np.asarray(value) for name, value in tokens.items()}
+        input_ids = np.asarray(tokens["input_ids"])
+        attention_mask = np.asarray(tokens["attention_mask"])
+        eos_token_id = self.tokenizer.eos_token_id
+        if eos_token_id is None:
+            raise RuntimeError("SigLIP2 tokenizer must define an EOS token")
+
+        # SigLIP2 pools the final position, which must be a sticky EOS token.
+        input_ids = np.where(attention_mask == 0, eos_token_id, input_ids)
+        return {
+            "input_ids": input_ids,
+            "attention_mask": np.ones_like(attention_mask),
+        }
 
 
 class OnnxBackend(_BaseBackend):
