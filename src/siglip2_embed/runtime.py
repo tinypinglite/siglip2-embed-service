@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from threading import Lock
 from typing import Protocol
@@ -209,9 +209,16 @@ class EmbeddingService:
         self._inference_lock = Lock()
 
     def embed_images(self, payloads: list[bytes]) -> np.ndarray:
-        prepared = list(self._cpu_pool.map(self._prepare_one_image, payloads))
-        with self._inference_lock:
-            return self.backend.embed_images(prepared)
+        futures = {
+            self._cpu_pool.submit(self._prepare_one_image, payload): index
+            for index, payload in enumerate(payloads)
+        }
+        vectors: dict[int, np.ndarray] = {}
+        for future in as_completed(futures):
+            prepared = future.result()
+            with self._inference_lock:
+                vectors[futures[future]] = self.backend.embed_images([prepared])
+        return np.concatenate([vectors[index] for index in range(len(payloads))])
 
     def embed_texts(self, texts: list[str]) -> np.ndarray:
         with self._text_prepare_lock:

@@ -1,6 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
-from threading import Barrier, Lock
+from threading import Barrier, Event, Lock
 from types import SimpleNamespace
 
 import numpy as np
@@ -246,3 +246,41 @@ def test_image_preparation_honors_cpu_concurrency() -> None:
         service._cpu_pool.shutdown()
 
     assert result.shape == (2, 1)
+
+
+def test_image_embedding_pipelines_preparation_and_preserves_input_order() -> None:
+    first_started = Event()
+    second_inferred = Event()
+    inference_order: list[int] = []
+
+    class PipelineBackend:
+        def embed_images(self, pixels: list[np.ndarray]) -> np.ndarray:
+            value = int(pixels[0][0, 0, 0, 0])
+            inference_order.append(value)
+            if value == 2:
+                second_inferred.set()
+            return np.array([[value]], dtype=np.float32)
+
+    def prepare(payload: bytes) -> np.ndarray:
+        if payload == b"first":
+            first_started.set()
+            assert second_inferred.wait(timeout=2)
+            value = 1
+        else:
+            assert first_started.wait(timeout=2)
+            value = 2
+        return np.full((1, 1, 1, 1), value, dtype=np.float32)
+
+    service = object.__new__(EmbeddingService)
+    service.backend = PipelineBackend()
+    service._cpu_pool = ThreadPoolExecutor(max_workers=2)
+    service._inference_lock = Lock()
+    service._prepare_one_image = prepare
+
+    try:
+        result = service.embed_images([b"first", b"second"])
+    finally:
+        service._cpu_pool.shutdown()
+
+    assert inference_order == [2, 1]
+    np.testing.assert_array_equal(result, np.array([[1], [2]], dtype=np.float32))
