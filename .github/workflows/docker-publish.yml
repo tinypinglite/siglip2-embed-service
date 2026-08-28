@@ -89,7 +89,7 @@ jobs:
           mkdir -p model-bundles/active
           tar --zstd -xf .model-release/siglip2-base-patch16-224-v1-onnx-fp16.tar.zst \
             -C model-bundles/active
-          chmod -R a+rX model-bundles/active
+          chmod -R u+rwX,go+rX model-bundles/active
 
       - name: Build and push multi-architecture CPU image
         uses: docker/build-push-action@v6
@@ -156,7 +156,7 @@ jobs:
           mkdir -p model-bundles/active
           tar --zstd -xf .model-release/siglip2-base-patch16-224-v1-openvino-fp16.tar.zst \
             -C model-bundles/active
-          chmod -R a+rX model-bundles/active
+          chmod -R u+rwX,go+rX model-bundles/active
 
       - name: Build and push Intel GPU image
         uses: docker/build-push-action@v6
