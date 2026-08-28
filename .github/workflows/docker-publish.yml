@@ -58,7 +58,7 @@ jobs:
             fi
           } >> "$GITHUB_OUTPUT"
 
-      - name: Download immutable model bundles
+      - name: Download immutable ONNX model bundle
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -66,10 +66,9 @@ jobs:
           mkdir -p .model-release
           gh release download "${MODEL_RELEASE_TAG}" \
             --repo "${GITHUB_REPOSITORY}" \
-            --pattern 'siglip2-base-patch16-224-v1-*-fp16.tar.zst' \
+            --pattern 'siglip2-base-patch16-224-v1-onnx-fp16.tar.zst' \
             --dir .model-release
           test -f .model-release/siglip2-base-patch16-224-v1-onnx-fp16.tar.zst
-          test -f .model-release/siglip2-base-patch16-224-v1-openvino-fp16.tar.zst
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -107,6 +106,14 @@ jobs:
           cache-from: type=gha,scope=siglip2-cpu
           cache-to: type=gha,mode=max,scope=siglip2-cpu
 
+      - name: Reclaim runner disk space before NVIDIA build
+        run: |
+          set -euo pipefail
+          rm -rf model-bundles/active
+          docker buildx prune --all --force
+          docker system prune --all --force --volumes
+          df -h
+
       - name: Build and push NVIDIA CUDA image
         uses: docker/build-push-action@v6
         with:
@@ -121,6 +128,26 @@ jobs:
           build-args: MODEL_BUNDLE=model-bundles/active
           cache-from: type=gha,scope=siglip2-cuda
           cache-to: type=gha,mode=max,scope=siglip2-cuda
+
+      - name: Reclaim runner disk space before Intel build
+        run: |
+          set -euo pipefail
+          rm -rf .model-release model-bundles/active
+          docker buildx prune --all --force
+          docker system prune --all --force --volumes
+          df -h
+
+      - name: Download immutable OpenVINO model bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p .model-release
+          gh release download "${MODEL_RELEASE_TAG}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --pattern 'siglip2-base-patch16-224-v1-openvino-fp16.tar.zst' \
+            --dir .model-release
+          test -f .model-release/siglip2-base-patch16-224-v1-openvino-fp16.tar.zst
 
       - name: Prepare OpenVINO model bundle
         run: |
