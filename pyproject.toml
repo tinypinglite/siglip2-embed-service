@@ -16,7 +16,7 @@ dependencies = [
 [project.optional-dependencies]
 cpu = ["onnxruntime==1.22.0"]
 cuda = ["onnxruntime-gpu==1.22.0"]
-intel = ["openvino==2025.4.1"]
+intel = ["openvino==2026.4.0"]
 
 [dependency-groups]
 dev = ["pytest>=8.3,<9"]

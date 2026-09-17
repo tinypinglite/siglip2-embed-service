@@ -2,11 +2,8 @@ version = 1
 revision = 3
 requires-python = ">=3.11, <3.13"
 resolution-markers = [
-    "python_full_version >= '3.12' and extra != 'extra-21-siglip2-embed-service-cpu' and extra == 'extra-21-siglip2-embed-service-cuda' and extra != 'extra-21-siglip2-embed-service-intel'",
-    "python_full_version < '3.12' and extra != 'extra-21-siglip2-embed-service-cpu' and extra == 'extra-21-siglip2-embed-service-cuda' and extra != 'extra-21-siglip2-embed-service-intel'",
-    "python_full_version >= '3.12' and extra == 'extra-21-siglip2-embed-service-cpu' and extra != 'extra-21-siglip2-embed-service-cuda' and extra != 'extra-21-siglip2-embed-service-intel'",
-    "python_full_version < '3.12' and extra == 'extra-21-siglip2-embed-service-cpu' and extra != 'extra-21-siglip2-embed-service-cuda' and extra != 'extra-21-siglip2-embed-service-intel'",
-    "extra != 'extra-21-siglip2-embed-service-cpu' and extra != 'extra-21-siglip2-embed-service-cuda'",
+    "python_full_version >= '3.12'",
+    "python_full_version < '3.12'",
 ]
 conflicts = [[
     { package = "siglip2-embed-service", extra = "cpu" },
@@ -298,43 +295,6 @@ wheels = [
 
 [[package]]
 name = "numpy"
-version = "2.3.5"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/76/65/21b3bc86aac7b8f2862db1e808f1ea22b028e30a225a34a5ede9bf8678f2/numpy-2.3.5.tar.gz", hash = "sha256:784db1dcdab56bf0517743e746dfb0f885fc68d948aba86eeec2cba234bdf1c0", size = 20584950, upload-time = "2025-11-16T22:52:42.067Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/43/77/84dd1d2e34d7e2792a236ba180b5e8fcc1e3e414e761ce0253f63d7f572e/numpy-2.3.5-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:de5672f4a7b200c15a4127042170a694d4df43c992948f5e1af57f0174beed10", size = 17034641, upload-time = "2025-11-16T22:49:19.336Z" },
-    { url = "https://files.pythonhosted.org/packages/2a/ea/25e26fa5837106cde46ae7d0b667e20f69cbbc0efd64cba8221411ab26ae/numpy-2.3.5-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:acfd89508504a19ed06ef963ad544ec6664518c863436306153e13e94605c218", size = 12528324, upload-time = "2025-11-16T22:49:22.582Z" },
-    { url = "https://files.pythonhosted.org/packages/4d/1a/e85f0eea4cf03d6a0228f5c0256b53f2df4bc794706e7df019fc622e47f1/numpy-2.3.5-cp311-cp311-macosx_14_0_arm64.whl", hash = "sha256:ffe22d2b05504f786c867c8395de703937f934272eb67586817b46188b4ded6d", size = 5356872, upload-time = "2025-11-16T22:49:25.408Z" },
-    { url = "https://files.pythonhosted.org/packages/5c/bb/35ef04afd567f4c989c2060cde39211e4ac5357155c1833bcd1166055c61/numpy-2.3.5-cp311-cp311-macosx_14_0_x86_64.whl", hash = "sha256:872a5cf366aec6bb1147336480fef14c9164b154aeb6542327de4970282cd2f5", size = 6893148, upload-time = "2025-11-16T22:49:27.549Z" },
-    { url = "https://files.pythonhosted.org/packages/f2/2b/05bbeb06e2dff5eab512dfc678b1cc5ee94d8ac5956a0885c64b6b26252b/numpy-2.3.5-cp311-cp311-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:3095bdb8dd297e5920b010e96134ed91d852d81d490e787beca7e35ae1d89cf7", size = 14557282, upload-time = "2025-11-16T22:49:30.964Z" },
-    { url = "https://files.pythonhosted.org/packages/65/fb/2b23769462b34398d9326081fad5655198fcf18966fcb1f1e49db44fbf31/numpy-2.3.5-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:8cba086a43d54ca804ce711b2a940b16e452807acebe7852ff327f1ecd49b0d4", size = 16897903, upload-time = "2025-11-16T22:49:34.191Z" },
-    { url = "https://files.pythonhosted.org/packages/ac/14/085f4cf05fc3f1e8aa95e85404e984ffca9b2275a5dc2b1aae18a67538b8/numpy-2.3.5-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:6cf9b429b21df6b99f4dee7a1218b8b7ffbbe7df8764dc0bd60ce8a0708fed1e", size = 16341672, upload-time = "2025-11-16T22:49:37.2Z" },
-    { url = "https://files.pythonhosted.org/packages/6f/3b/1f73994904142b2aa290449b3bb99772477b5fd94d787093e4f24f5af763/numpy-2.3.5-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:396084a36abdb603546b119d96528c2f6263921c50df3c8fd7cb28873a237748", size = 18838896, upload-time = "2025-11-16T22:49:39.727Z" },
-    { url = "https://files.pythonhosted.org/packages/cd/b9/cf6649b2124f288309ffc353070792caf42ad69047dcc60da85ee85fea58/numpy-2.3.5-cp311-cp311-win32.whl", hash = "sha256:b0c7088a73aef3d687c4deef8452a3ac7c1be4e29ed8bf3b366c8111128ac60c", size = 6563608, upload-time = "2025-11-16T22:49:42.079Z" },
-    { url = "https://files.pythonhosted.org/packages/aa/44/9fe81ae1dcc29c531843852e2874080dc441338574ccc4306b39e2ff6e59/numpy-2.3.5-cp311-cp311-win_amd64.whl", hash = "sha256:a414504bef8945eae5f2d7cb7be2d4af77c5d1cb5e20b296c2c25b61dff2900c", size = 13078442, upload-time = "2025-11-16T22:49:43.99Z" },
-    { url = "https://files.pythonhosted.org/packages/6d/a7/f99a41553d2da82a20a2f22e93c94f928e4490bb447c9ff3c4ff230581d3/numpy-2.3.5-cp311-cp311-win_arm64.whl", hash = "sha256:0cd00b7b36e35398fa2d16af7b907b65304ef8bb4817a550e06e5012929830fa", size = 10458555, upload-time = "2025-11-16T22:49:47.092Z" },
-    { url = "https://files.pythonhosted.org/packages/44/37/e669fe6cbb2b96c62f6bbedc6a81c0f3b7362f6a59230b23caa673a85721/numpy-2.3.5-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:74ae7b798248fe62021dbf3c914245ad45d1a6b0cb4a29ecb4b31d0bfbc4cc3e", size = 16733873, upload-time = "2025-11-16T22:49:49.84Z" },
-    { url = "https://files.pythonhosted.org/packages/c5/65/df0db6c097892c9380851ab9e44b52d4f7ba576b833996e0080181c0c439/numpy-2.3.5-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:ee3888d9ff7c14604052b2ca5535a30216aa0a58e948cdd3eeb8d3415f638769", size = 12259838, upload-time = "2025-11-16T22:49:52.863Z" },
-    { url = "https://files.pythonhosted.org/packages/5b/e1/1ee06e70eb2136797abe847d386e7c0e830b67ad1d43f364dd04fa50d338/numpy-2.3.5-cp312-cp312-macosx_14_0_arm64.whl", hash = "sha256:612a95a17655e213502f60cfb9bf9408efdc9eb1d5f50535cc6eb365d11b42b5", size = 5088378, upload-time = "2025-11-16T22:49:55.055Z" },
-    { url = "https://files.pythonhosted.org/packages/6d/9c/1ca85fb86708724275103b81ec4cf1ac1d08f465368acfc8da7ab545bdae/numpy-2.3.5-cp312-cp312-macosx_14_0_x86_64.whl", hash = "sha256:3101e5177d114a593d79dd79658650fe28b5a0d8abeb8ce6f437c0e6df5be1a4", size = 6628559, upload-time = "2025-11-16T22:49:57.371Z" },
-    { url = "https://files.pythonhosted.org/packages/74/78/fcd41e5a0ce4f3f7b003da85825acddae6d7ecb60cf25194741b036ca7d6/numpy-2.3.5-cp312-cp312-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:8b973c57ff8e184109db042c842423ff4f60446239bd585a5131cc47f06f789d", size = 14250702, upload-time = "2025-11-16T22:49:59.632Z" },
-    { url = "https://files.pythonhosted.org/packages/b6/23/2a1b231b8ff672b4c450dac27164a8b2ca7d9b7144f9c02d2396518352eb/numpy-2.3.5-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:0d8163f43acde9a73c2a33605353a4f1bc4798745a8b1d73183b28e5b435ae28", size = 16606086, upload-time = "2025-11-16T22:50:02.127Z" },
-    { url = "https://files.pythonhosted.org/packages/a0/c5/5ad26fbfbe2012e190cc7d5003e4d874b88bb18861d0829edc140a713021/numpy-2.3.5-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:51c1e14eb1e154ebd80e860722f9e6ed6ec89714ad2db2d3aa33c31d7c12179b", size = 16025985, upload-time = "2025-11-16T22:50:04.536Z" },
-    { url = "https://files.pythonhosted.org/packages/d2/fa/dd48e225c46c819288148d9d060b047fd2a6fb1eb37eae25112ee4cb4453/numpy-2.3.5-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:b46b4ec24f7293f23adcd2d146960559aaf8020213de8ad1909dba6c013bf89c", size = 18542976, upload-time = "2025-11-16T22:50:07.557Z" },
-    { url = "https://files.pythonhosted.org/packages/05/79/ccbd23a75862d95af03d28b5c6901a1b7da4803181513d52f3b86ed9446e/numpy-2.3.5-cp312-cp312-win32.whl", hash = "sha256:3997b5b3c9a771e157f9aae01dd579ee35ad7109be18db0e85dbdbe1de06e952", size = 6285274, upload-time = "2025-11-16T22:50:10.746Z" },
-    { url = "https://files.pythonhosted.org/packages/2d/57/8aeaf160312f7f489dea47ab61e430b5cb051f59a98ae68b7133ce8fa06a/numpy-2.3.5-cp312-cp312-win_amd64.whl", hash = "sha256:86945f2ee6d10cdfd67bcb4069c1662dd711f7e2a4343db5cecec06b87cf31aa", size = 12782922, upload-time = "2025-11-16T22:50:12.811Z" },
-    { url = "https://files.pythonhosted.org/packages/78/a6/aae5cc2ca78c45e64b9ef22f089141d661516856cf7c8a54ba434576900d/numpy-2.3.5-cp312-cp312-win_arm64.whl", hash = "sha256:f28620fe26bee16243be2b7b874da327312240a7cdc38b769a697578d2100013", size = 10194667, upload-time = "2025-11-16T22:50:16.16Z" },
-    { url = "https://files.pythonhosted.org/packages/c6/65/f9dea8e109371ade9c782b4e4756a82edf9d3366bca495d84d79859a0b79/numpy-2.3.5-pp311-pypy311_pp73-macosx_10_15_x86_64.whl", hash = "sha256:f0963b55cdd70fad460fa4c1341f12f976bb26cb66021a5580329bd498988310", size = 16910689, upload-time = "2025-11-16T22:52:23.247Z" },
-    { url = "https://files.pythonhosted.org/packages/00/4f/edb00032a8fb92ec0a679d3830368355da91a69cab6f3e9c21b64d0bb986/numpy-2.3.5-pp311-pypy311_pp73-macosx_11_0_arm64.whl", hash = "sha256:f4255143f5160d0de972d28c8f9665d882b5f61309d8362fdd3e103cf7bf010c", size = 12457053, upload-time = "2025-11-16T22:52:26.367Z" },
-    { url = "https://files.pythonhosted.org/packages/16/a4/e8a53b5abd500a63836a29ebe145fc1ab1f2eefe1cfe59276020373ae0aa/numpy-2.3.5-pp311-pypy311_pp73-macosx_14_0_arm64.whl", hash = "sha256:a4b9159734b326535f4dd01d947f919c6eefd2d9827466a696c44ced82dfbc18", size = 5285635, upload-time = "2025-11-16T22:52:29.266Z" },
-    { url = "https://files.pythonhosted.org/packages/a3/2f/37eeb9014d9c8b3e9c55bc599c68263ca44fdbc12a93e45a21d1d56df737/numpy-2.3.5-pp311-pypy311_pp73-macosx_14_0_x86_64.whl", hash = "sha256:2feae0d2c91d46e59fcd62784a3a83b3fb677fead592ce51b5a6fbb4f95965ff", size = 6801770, upload-time = "2025-11-16T22:52:31.421Z" },
-    { url = "https://files.pythonhosted.org/packages/7d/e4/68d2f474df2cb671b2b6c2986a02e520671295647dad82484cde80ca427b/numpy-2.3.5-pp311-pypy311_pp73-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:ffac52f28a7849ad7576293c0cb7b9f08304e8f7d738a8cb8a90ec4c55a998eb", size = 14391768, upload-time = "2025-11-16T22:52:33.593Z" },
-    { url = "https://files.pythonhosted.org/packages/b8/50/94ccd8a2b141cb50651fddd4f6a48874acb3c91c8f0842b08a6afc4b0b21/numpy-2.3.5-pp311-pypy311_pp73-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:63c0e9e7eea69588479ebf4a8a270d5ac22763cc5854e9a7eae952a3908103f7", size = 16729263, upload-time = "2025-11-16T22:52:36.369Z" },
-    { url = "https://files.pythonhosted.org/packages/2d/ee/346fa473e666fe14c52fcdd19ec2424157290a032d4c41f98127bfb31ac7/numpy-2.3.5-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:f16417ec91f12f814b10bafe79ef77e70113a2f5f7018640e7425ff979253425", size = 12967213, upload-time = "2025-11-16T22:52:39.38Z" },
-]
-
-[[package]]
-name = "numpy"
 version = "2.4.6"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
@@ -441,24 +401,22 @@ wheels = [
 
 [[package]]
 name = "openvino"
-version = "2025.4.1"
+version = "2026.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy", version = "2.3.5", source = { registry = "https://pypi.org/simple" } },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and extra != 'extra-21-siglip2-embed-service-cpu' and extra != 'extra-21-siglip2-embed-service-cuda') or (extra == 'extra-21-siglip2-embed-service-cpu' and extra == 'extra-21-siglip2-embed-service-cuda') or (extra == 'extra-21-siglip2-embed-service-cpu' and extra == 'extra-21-siglip2-embed-service-intel') or (extra == 'extra-21-siglip2-embed-service-cuda' and extra == 'extra-21-siglip2-embed-service-intel')" },
+    { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra != 'extra-21-siglip2-embed-service-cpu' and extra != 'extra-21-siglip2-embed-service-cuda') or (extra == 'extra-21-siglip2-embed-service-cpu' and extra == 'extra-21-siglip2-embed-service-cuda') or (extra == 'extra-21-siglip2-embed-service-cpu' and extra == 'extra-21-siglip2-embed-service-intel') or (extra == 'extra-21-siglip2-embed-service-cuda' and extra == 'extra-21-siglip2-embed-service-intel')" },
     { name = "openvino-telemetry" },
-    { name = "packaging" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/21/13/5e75a1ff33473e2c59502068cd3997b70dcc5f5c0e227de136394c5c7a74/openvino-2025.4.1-20426-cp311-cp311-macosx_10_15_x86_64.whl", hash = "sha256:ee8ce8ebf22d407ce3b50f7926ee9b2fb9b17d131bae4bee68eba3bb5bbee203", size = 37647388, upload-time = "2025-12-17T16:17:52.78Z" },
-    { url = "https://files.pythonhosted.org/packages/b3/80/8f0682271baef15e5baf469b2d1400fefbbc23a963f0dbcded5400c7b60b/openvino-2025.4.1-20426-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:12c482011835d72341f038021129036089c6571f8d713810caaeba88750062e8", size = 32847644, upload-time = "2025-12-17T16:17:56.28Z" },
-    { url = "https://files.pythonhosted.org/packages/38/86/084a1d7e69c309e1e6a2c48a374cd78c99bed5acd74b9a3fb5653b151a71/openvino-2025.4.1-20426-cp311-cp311-manylinux2014_x86_64.whl", hash = "sha256:c552a68c094b0d75f48b7c19cbd3482c44e4e267821897dcb7c9f7c36ba5f88b", size = 50270056, upload-time = "2025-12-17T16:17:59.424Z" },
-    { url = "https://files.pythonhosted.org/packages/bd/dc/797b7874184d7c0b54cceef8c5a9066ef681e0235df6e8f496a1338dd4a6/openvino-2025.4.1-20426-cp311-cp311-manylinux_2_35_aarch64.whl", hash = "sha256:86d2d7c94cd3d29d4080cd105a3af50d3497a348b0e3414c2c04a2532feb4c12", size = 28261416, upload-time = "2025-12-17T16:18:01.898Z" },
-    { url = "https://files.pythonhosted.org/packages/37/a5/4fcef1515b893b503f4ac54d7b17668fde9cdbed1c06cd8b2f798833cab4/openvino-2025.4.1-20426-cp311-cp311-win_amd64.whl", hash = "sha256:695f9b5cdb1bc6315383548517e9836b7580220b711ca9417a034ce55028bf85", size = 41798606, upload-time = "2025-12-17T16:18:04.753Z" },
-    { url = "https://files.pythonhosted.org/packages/a8/9f/77da5039032063747dcf39434662f31d914fd515de86a20a405eea315c53/openvino-2025.4.1-20426-cp312-cp312-macosx_10_15_x86_64.whl", hash = "sha256:8994fcc9082fe4aed1ed2a6e531280de38d7293943c00284560b854945d5af9b", size = 37709218, upload-time = "2025-12-17T16:18:07.829Z" },
-    { url = "https://files.pythonhosted.org/packages/a0/79/57b35b05875e9155d8802815ad2c93bdc46e7c8883ce53109b7ba95f9d8d/openvino-2025.4.1-20426-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:8d082e73af653a40b97efaa8219adf62c60f32060b9929ebcb60d7f14e79e4f1", size = 32880775, upload-time = "2025-12-17T16:18:10.792Z" },
-    { url = "https://files.pythonhosted.org/packages/8a/91/807f4e288969bc696dee2e56d7269abffb56626249642effb8ec2ab7d424/openvino-2025.4.1-20426-cp312-cp312-manylinux2014_x86_64.whl", hash = "sha256:88f074286d420c1a1a95e7f2ba11109a899f2f3b3fd818cfe1e47ead22cc7e45", size = 50278348, upload-time = "2025-12-17T16:18:13.894Z" },
-    { url = "https://files.pythonhosted.org/packages/2e/b4/6c8f68db079b4a140c301c00f9c361df011b4d1205bbdb4cff93f9192348/openvino-2025.4.1-20426-cp312-cp312-manylinux_2_35_aarch64.whl", hash = "sha256:9fb7d45c8bb6c1ea9f90a18b6c9e18c4d3ce0d249198b6d9544b446285a33d3b", size = 28257849, upload-time = "2025-12-17T16:18:16.514Z" },
-    { url = "https://files.pythonhosted.org/packages/64/c2/582bd6d01fc6588bfe35c0f363d294a54daa4587cafe30e932fa51420d04/openvino-2025.4.1-20426-cp312-cp312-win_amd64.whl", hash = "sha256:c50293d1463698012eaa526dcc83f841b85a3f4952eea4c9445c83e0346f8e80", size = 41791284, upload-time = "2025-12-17T16:18:19.673Z" },
+    { url = "https://files.pythonhosted.org/packages/0f/07/b7be179965bb0ee5e1403127e7bc88c3c993a1cfc6a64ccc779d98c20185/openvino-2026.4.0-22959-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:73f54242b6cf6fb5b6ddee27cfc3c510ddbae96125d6bdb0408aa71a473748a8", size = 33304583, upload-time = "2026-09-16T14:54:09.976Z" },
+    { url = "https://files.pythonhosted.org/packages/3f/93/a24476fbf4e96b034adba461d3cc8df5e62c92dcb153a07d9656f9da77aa/openvino-2026.4.0-22959-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:71ee4e65a914044a510af43da16f3279c8f9dae22cbc8eac63d4a785c4a9c03f", size = 59116483, upload-time = "2026-09-16T14:54:14.666Z" },
+    { url = "https://files.pythonhosted.org/packages/0e/e2/11b4624261b33b411b20665517539cd0d560657358ac024df83be4731ab5/openvino-2026.4.0-22959-cp311-cp311-manylinux_2_35_aarch64.whl", hash = "sha256:8d552c6a8b0853447b291da3b2916d1b8a0e6f8bca70c8a9737d661fb5e268ca", size = 30308968, upload-time = "2026-09-16T14:54:18.262Z" },
+    { url = "https://files.pythonhosted.org/packages/f6/3d/aaa196157eb2910b47d040244410d478dc12502a55bbc769479ca629079c/openvino-2026.4.0-22959-cp311-cp311-win_amd64.whl", hash = "sha256:f00130dee4046272fc734afd88b9cbc69066f37219337828e04f1a1b257b2288", size = 84018114, upload-time = "2026-09-16T14:54:24.653Z" },
+    { url = "https://files.pythonhosted.org/packages/55/43/e5a7fd6a13f6bc0fb389461a5a2e79b5bbaaa4388341fd040e3466890e71/openvino-2026.4.0-22959-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:171b876d1e732b2cf1c6a47d48dc6065fe7a36abe3d2a0035c8d3be36c0d67a1", size = 33344189, upload-time = "2026-09-16T14:54:28.189Z" },
+    { url = "https://files.pythonhosted.org/packages/09/96/106f20950f8636f23925fa9867f9b1d7d10dd20f7b0300b10f8da40fdf16/openvino-2026.4.0-22959-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:75245768f656afffd49078cee55b50b9501bb6778798aec3cc30e5613a86e370", size = 59130214, upload-time = "2026-09-16T14:54:33.131Z" },
+    { url = "https://files.pythonhosted.org/packages/ca/73/ccfe5e280ba9a1123ee2fbc3fe60e95d9a1ad8f2ea3668d418c45b890b73/openvino-2026.4.0-22959-cp312-cp312-manylinux_2_35_aarch64.whl", hash = "sha256:cf2e8b12fd08588a69b11a8d2fe48c4373fb96eec28564dfc4754062c3f90439", size = 30292605, upload-time = "2026-09-16T14:54:36.743Z" },
+    { url = "https://files.pythonhosted.org/packages/62/95/6b1a095f865cd5a02f773590a419525ee9f9fc25770901cf461dad38aa29/openvino-2026.4.0-22959-cp312-cp312-win_amd64.whl", hash = "sha256:1d64a3178e750ea35f4095dc8ee6e0492795a5cf85c0dd24593a29f8a60c209d", size = 84025991, upload-time = "2026-09-16T14:54:41.519Z" },
 ]
 
 [[package]]
@@ -776,9 +734,8 @@ version = "0.1.2"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
-    { name = "numpy", version = "2.3.5", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-21-siglip2-embed-service-intel' or (extra == 'extra-21-siglip2-embed-service-cpu' and extra == 'extra-21-siglip2-embed-service-cuda') or (extra != 'extra-21-siglip2-embed-service-cpu' and extra != 'extra-21-siglip2-embed-service-cuda')" },
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and extra == 'extra-21-siglip2-embed-service-cpu') or (python_full_version < '3.12' and extra == 'extra-21-siglip2-embed-service-cuda') or (extra == 'extra-21-siglip2-embed-service-cpu' and extra == 'extra-21-siglip2-embed-service-cuda') or (extra == 'extra-21-siglip2-embed-service-cpu' and extra == 'extra-21-siglip2-embed-service-intel') or (extra == 'extra-21-siglip2-embed-service-cuda' and extra == 'extra-21-siglip2-embed-service-intel')" },
-    { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra == 'extra-21-siglip2-embed-service-cpu') or (python_full_version >= '3.12' and extra == 'extra-21-siglip2-embed-service-cuda') or (extra == 'extra-21-siglip2-embed-service-cpu' and extra == 'extra-21-siglip2-embed-service-cuda') or (extra == 'extra-21-siglip2-embed-service-cpu' and extra == 'extra-21-siglip2-embed-service-intel') or (extra == 'extra-21-siglip2-embed-service-cuda' and extra == 'extra-21-siglip2-embed-service-intel')" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12' or (extra == 'extra-21-siglip2-embed-service-cpu' and extra == 'extra-21-siglip2-embed-service-cuda') or (extra == 'extra-21-siglip2-embed-service-cpu' and extra == 'extra-21-siglip2-embed-service-intel') or (extra == 'extra-21-siglip2-embed-service-cuda' and extra == 'extra-21-siglip2-embed-service-intel')" },
+    { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-21-siglip2-embed-service-cpu' and extra == 'extra-21-siglip2-embed-service-cuda') or (extra == 'extra-21-siglip2-embed-service-cpu' and extra == 'extra-21-siglip2-embed-service-intel') or (extra == 'extra-21-siglip2-embed-service-cuda' and extra == 'extra-21-siglip2-embed-service-intel')" },
     { name = "pillow" },
     { name = "python-multipart" },
     { name = "transformers" },
@@ -807,7 +764,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=2,<3" },
     { name = "onnxruntime", marker = "extra == 'cpu'", specifier = "==1.22.0" },
     { name = "onnxruntime-gpu", marker = "extra == 'cuda'", specifier = "==1.22.0" },
-    { name = "openvino", marker = "extra == 'intel'", specifier = "==2025.4.1" },
+    { name = "openvino", marker = "extra == 'intel'", specifier = "==2026.4.0" },
     { name = "pillow", specifier = ">=11,<12" },
     { name = "python-multipart", specifier = ">=0.0.20,<1" },
     { name = "transformers", specifier = "==4.46.1" },
@@ -897,9 +854,8 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "filelock" },
     { name = "huggingface-hub" },
-    { name = "numpy", version = "2.3.5", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-21-siglip2-embed-service-intel' or (extra == 'extra-21-siglip2-embed-service-cpu' and extra == 'extra-21-siglip2-embed-service-cuda') or (extra != 'extra-21-siglip2-embed-service-cpu' and extra != 'extra-21-siglip2-embed-service-cuda')" },
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and extra == 'extra-21-siglip2-embed-service-cpu') or (python_full_version < '3.12' and extra == 'extra-21-siglip2-embed-service-cuda') or (extra == 'extra-21-siglip2-embed-service-cpu' and extra == 'extra-21-siglip2-embed-service-cuda') or (extra == 'extra-21-siglip2-embed-service-cpu' and extra == 'extra-21-siglip2-embed-service-intel') or (extra == 'extra-21-siglip2-embed-service-cuda' and extra == 'extra-21-siglip2-embed-service-intel')" },
-    { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra == 'extra-21-siglip2-embed-service-cpu') or (python_full_version >= '3.12' and extra == 'extra-21-siglip2-embed-service-cuda') or (extra == 'extra-21-siglip2-embed-service-cpu' and extra == 'extra-21-siglip2-embed-service-cuda') or (extra == 'extra-21-siglip2-embed-service-cpu' and extra == 'extra-21-siglip2-embed-service-intel') or (extra == 'extra-21-siglip2-embed-service-cuda' and extra == 'extra-21-siglip2-embed-service-intel')" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12' or (extra == 'extra-21-siglip2-embed-service-cpu' and extra == 'extra-21-siglip2-embed-service-cuda') or (extra == 'extra-21-siglip2-embed-service-cpu' and extra == 'extra-21-siglip2-embed-service-intel') or (extra == 'extra-21-siglip2-embed-service-cuda' and extra == 'extra-21-siglip2-embed-service-intel')" },
+    { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-21-siglip2-embed-service-cpu' and extra == 'extra-21-siglip2-embed-service-cuda') or (extra == 'extra-21-siglip2-embed-service-cpu' and extra == 'extra-21-siglip2-embed-service-intel') or (extra == 'extra-21-siglip2-embed-service-cuda' and extra == 'extra-21-siglip2-embed-service-intel')" },
     { name = "packaging" },
     { name = "pyyaml" },
     { name = "regex" },

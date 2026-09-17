@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from threading import Lock
@@ -17,6 +18,8 @@ from .webp import WebPDecodeError, decode_webp_rgb
 
 
 MODEL_IMAGE_SIZE = 224
+
+logger = logging.getLogger("uvicorn.error")
 
 
 class InputError(ValueError):
@@ -153,8 +156,28 @@ class OpenVinoBackend(_BaseBackend):
             raise RuntimeError("missing bundled OpenVINO model")
 
         core = ov.Core()
-        self.image_compiled = core.compile_model(str(image_path), "GPU")
-        self.text_compiled = core.compile_model(str(text_path), "GPU")
+        available_devices = core.available_devices
+        if not any(device.startswith("GPU") for device in available_devices):
+            raise RuntimeError(
+                "OpenVINO GPU device is unavailable "
+                f"(detected devices: {available_devices}); this image requires a "
+                "supported Intel iGPU, use the cpu image instead"
+            )
+
+        try:
+            self.image_compiled = core.compile_model(str(image_path), "GPU")
+            self.text_compiled = core.compile_model(str(text_path), "GPU")
+        except Exception as error:
+            raise RuntimeError(
+                "OpenVINO GPU compilation failed; the Intel iGPU or its driver "
+                "is not supported by this image, use the cpu image instead"
+            ) from error
+
+        logger.info(
+            "OpenVINO backend ready on GPU: %s (%s)",
+            core.get_property("GPU", "FULL_DEVICE_NAME"),
+            core.get_property("GPU", "DEVICE_ARCHITECTURE"),
+        )
         self.image_request = self.image_compiled.create_infer_request()
         self.text_request = self.text_compiled.create_infer_request()
         self.image_input = self.image_compiled.input(0)

@@ -13,5 +13,7 @@
 | 镜像 | 平台 | 用途 |
 | --- | --- | --- |
 | `tinyping/siglip2-embed-service:cpu` | Linux amd64、arm64 | 纯 CPU。适用于 AMD CPU、Intel CPU 和 ARM64 设备。 |
-| `tinyping/siglip2-embed-service:intel` | Linux amd64 | Intel 核显。使用 OpenVINO，需将 `/dev/dri` 传入容器。 |
+| `tinyping/siglip2-embed-service:intel` | Linux amd64 | Intel 核显。使用 OpenVINO，需将 `/dev/dri` 传入容器。支持 Gen9 及以上的 Intel 核显（HD 500/600、UHD 600/605、UHD、Iris Xe、Arc 等，覆盖 Apollo Lake、Gemini Lake、Jasper Lake、Alder Lake-N 与 Twin Lake）。 |
 | `tinyping/siglip2-embed-service:cuda` | Linux amd64 | NVIDIA 显卡。使用 CUDA，需要 NVIDIA Container Toolkit。 |
+
+`intel` 镜像不会回退到 CPU：核显或驱动不受支持时（例如 HD 400（Braswell）及更早的核显、AMD 核显、未传入 `/dev/dri`），服务会直接启动失败并在日志中说明原因，此时请改用 `cpu` 镜像。
