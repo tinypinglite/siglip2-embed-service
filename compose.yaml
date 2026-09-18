@@ -8,6 +8,7 @@ services:
     environment:
       EMBEDDING_BACKEND: cpu
       CPU_CONCURRENCY: "${CPU_CONCURRENCY:-1}"
+      TEXT_TOWER_ENABLED: "${TEXT_TOWER_ENABLED:-true}"
     networks:
       default:
         aliases: ["siglip2-embed"]
@@ -25,6 +26,7 @@ services:
     environment:
       EMBEDDING_BACKEND: intel_gpu
       CPU_CONCURRENCY: "${CPU_CONCURRENCY:-1}"
+      TEXT_TOWER_ENABLED: "${TEXT_TOWER_ENABLED:-true}"
     networks:
       default:
         aliases: ["siglip2-embed"]
@@ -39,6 +41,7 @@ services:
     environment:
       EMBEDDING_BACKEND: cuda
       CPU_CONCURRENCY: "${CPU_CONCURRENCY:-1}"
+      TEXT_TOWER_ENABLED: "${TEXT_TOWER_ENABLED:-true}"
     networks:
       default:
         aliases: ["siglip2-embed"]

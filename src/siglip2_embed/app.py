@@ -9,7 +9,7 @@ from typing import AsyncIterator
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from pydantic import BaseModel, Field
 
-from .runtime import EmbeddingService, InputError
+from .runtime import EmbeddingService, InputError, TextEmbeddingDisabledError
 from .settings import Settings
 
 
@@ -45,17 +45,22 @@ app = FastAPI(title="SigLIP2 Embed Service", lifespan=lifespan)
 @app.get("/healthz")
 def healthz(request: Request) -> dict[str, str]:
     settings: Settings = request.app.state.settings
-    return {"status": "ok", "backend": settings.backend}
+    return {
+        "status": "ok",
+        "backend": settings.backend,
+        "text_tower": "enabled" if settings.text_tower_enabled else "disabled",
+    }
 
 
 @app.get("/v1/embedding-space", response_model=EmbeddingSpaceResponse)
 def embedding_space(request: Request) -> EmbeddingSpaceResponse:
     settings: Settings = request.app.state.settings
     service: EmbeddingService = request.app.state.service
-    vector = service.embed_texts(["probe"])
+    # Keep reporting image+text so existing clients stay compatible when the
+    # text tower is turned off.
     return EmbeddingSpaceResponse(
         space_id=settings.embedding_space_id,
-        dimension=int(vector.shape[1]),
+        dimension=service.probe_dimension(),
     )
 
 
@@ -81,7 +86,12 @@ async def embed_texts(
     body: TextEmbeddingRequest,
     request: Request,
 ) -> EmbeddingResponse:
-    vectors = await asyncio.to_thread(request.app.state.service.embed_texts, body.texts)
+    try:
+        vectors = await asyncio.to_thread(
+            request.app.state.service.embed_texts, body.texts
+        )
+    except TextEmbeddingDisabledError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
     return EmbeddingResponse(
         dimension=int(vectors.shape[1]),
         vectors=vectors.tolist(),

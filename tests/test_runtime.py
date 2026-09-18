@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
+from pathlib import Path
 from threading import Barrier, Event, Lock
 from types import SimpleNamespace
 
@@ -9,11 +10,13 @@ from PIL import Image
 from transformers.image_utils import ChannelDimension
 
 import siglip2_embed.jpeg as jpeg
+from siglip2_embed import runtime
 from siglip2_embed.runtime import (
     EmbeddingService,
     InputError,
     OnnxBackend,
     OpenVinoBackend,
+    TextEmbeddingDisabledError,
     _decode_image,
 )
 from siglip2_embed.settings import EMBEDDING_SPACE_ID, MODEL_PATH, Settings
@@ -96,6 +99,46 @@ def test_prepare_texts_uses_sticky_eos(backend_type: type) -> None:
     np.testing.assert_array_equal(result["attention_mask"], np.ones((2, 4), dtype=np.int64))
 
 
+def test_base_backend_loads_text_assets_only_when_text_tower_is_enabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    loaded: list[str] = []
+
+    def loader(name: str, value: object) -> SimpleNamespace:
+        def load(*args: object, **kwargs: object) -> object:
+            loaded.append(name)
+            return value
+
+        return SimpleNamespace(from_pretrained=load)
+
+    monkeypatch.setattr(runtime, "AutoImageProcessor", loader("image_processor", object()))
+    monkeypatch.setattr(runtime, "AutoTokenizer", loader("tokenizer", object()))
+    monkeypatch.setattr(
+        runtime,
+        "AutoConfig",
+        loader(
+            "config",
+            SimpleNamespace(text_config=SimpleNamespace(max_position_embeddings=64)),
+        ),
+    )
+
+    disabled = runtime._BaseBackend(
+        SimpleNamespace(model_path=Path("/model"), text_tower_enabled=False)
+    )
+
+    assert loaded == ["image_processor"]
+    assert not hasattr(disabled, "tokenizer")
+    assert not hasattr(disabled, "text_length")
+
+    loaded.clear()
+    enabled = runtime._BaseBackend(
+        SimpleNamespace(model_path=Path("/model"), text_tower_enabled=True)
+    )
+
+    assert loaded == ["image_processor", "tokenizer", "config"]
+    assert enabled.text_length == 64
+
+
 def test_settings_fix_the_model_identity(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("MODEL_PATH", "/unexpected")
     monkeypatch.setenv("EMBEDDING_SPACE_ID", "unexpected")
@@ -103,6 +146,44 @@ def test_settings_fix_the_model_identity(monkeypatch: pytest.MonkeyPatch) -> Non
 
     assert settings.model_path == MODEL_PATH
     assert settings.embedding_space_id == EMBEDDING_SPACE_ID
+
+
+def test_settings_enable_the_text_tower_by_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("TEXT_TOWER_ENABLED", raising=False)
+
+    settings = Settings.from_env()
+
+    assert settings.text_tower_enabled is True
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ("true", True),
+        ("1", True),
+        ("ON", True),
+        ("false", False),
+        ("0", False),
+        ("off", False),
+    ],
+)
+def test_settings_parse_the_text_tower_flag(
+    monkeypatch: pytest.MonkeyPatch, raw: str, expected: bool
+) -> None:
+    monkeypatch.setenv("TEXT_TOWER_ENABLED", raw)
+
+    settings = Settings.from_env()
+
+    assert settings.text_tower_enabled is expected
+
+
+def test_settings_reject_an_invalid_text_tower_flag(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("TEXT_TOWER_ENABLED", "maybe")
+
+    with pytest.raises(ValueError, match="TEXT_TOWER_ENABLED"):
+        Settings.from_env()
 
 
 def test_settings_accept_common_8k_source_images_by_default(
@@ -284,3 +365,46 @@ def test_image_embedding_pipelines_preparation_and_preserves_input_order() -> No
 
     assert inference_order == [2, 1]
     np.testing.assert_array_equal(result, np.array([[1], [2]], dtype=np.float32))
+
+
+def test_text_embedding_is_rejected_when_text_tower_is_disabled() -> None:
+    service = object.__new__(EmbeddingService)
+    service.settings = SimpleNamespace(text_tower_enabled=False)
+
+    with pytest.raises(TextEmbeddingDisabledError):
+        service.embed_texts(["query"])
+
+
+def test_dimension_probe_uses_text_when_text_tower_is_enabled() -> None:
+    probes: list[list[str]] = []
+
+    def embed_texts(texts: list[str]) -> np.ndarray:
+        probes.append(texts)
+        return np.zeros((1, 768), dtype=np.float32)
+
+    service = object.__new__(EmbeddingService)
+    service.settings = SimpleNamespace(text_tower_enabled=True)
+    service.embed_texts = embed_texts
+
+    assert service.probe_dimension() == 768
+    assert probes == [["probe"]]
+
+
+def test_dimension_probe_falls_back_to_images_when_text_tower_is_disabled() -> None:
+    prepared_shapes: list[tuple[int, ...]] = []
+
+    class ProbeBackend:
+        def prepare_image(self, image: np.ndarray) -> np.ndarray:
+            prepared_shapes.append(image.shape)
+            return np.zeros((1, 3, 224, 224), dtype=np.float32)
+
+        def embed_images(self, pixels: list[np.ndarray]) -> np.ndarray:
+            return np.zeros((len(pixels), 768), dtype=np.float32)
+
+    service = object.__new__(EmbeddingService)
+    service.settings = SimpleNamespace(text_tower_enabled=False)
+    service.backend = ProbeBackend()
+    service._inference_lock = Lock()
+
+    assert service.probe_dimension() == 768
+    assert prepared_shapes == [(224, 224, 3)]

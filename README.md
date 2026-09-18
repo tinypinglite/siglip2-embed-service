@@ -8,6 +8,17 @@
 
 渐进式 JPEG 需要解码器保留整张图的系数，不能像基线 JPEG 一样完全按行流式处理；为保持内存边界，服务支持最多 1000 万源像素、32 个扫描的渐进式 JPEG。这个额外上限只影响渐进式 JPEG，不影响基线 JPEG、WebP 或 `MAX_IMAGE_PIXELS` 的 4000 万像素准入上限。图片 CPU 预处理并发数由 `CPU_CONCURRENCY` 控制，默认值为 1。可通过 `MAX_IMAGE_PIXELS` 调整通用源图片准入上限。
 
+## 环境变量
+
+| 变量 | 默认值 | 说明 |
+| --- | --- | --- |
+| `EMBEDDING_BACKEND` | 由镜像决定 | `cpu`、`cuda` 或 `intel_gpu`；`compose.yaml` 已按 profile 设置。 |
+| `CPU_CONCURRENCY` | `1` | 图片 CPU 预处理并发数。 |
+| `TEXT_TOWER_ENABLED` | `true` | 是否启用文本塔。设为 `false` 时不加载文本编码器与 tokenizer，只提供图片向量；`POST /v1/embed/texts` 返回 503，`GET /v1/embedding-space` 的维度探测改用图片，`modalities` 仍上报 `image` 和 `text` 以兼容既有客户端。 |
+| `MAX_IMAGE_PIXELS` | `40000000` | 源图片像素准入上限。 |
+| `MAX_IMAGE_BYTES` | `20000000` | 单张图片字节上限。 |
+| `MAX_REQUEST_BYTES` | `128000000` | 单个请求的总字节上限，不能小于 `MAX_IMAGE_BYTES`。 |
+
 ## 镜像选择
 
 | 镜像 | 平台 | 用途 |

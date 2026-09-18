@@ -10,6 +10,16 @@ from pathlib import Path
 MODEL_PATH = Path("/opt/siglip2")
 EMBEDDING_SPACE_ID = "siglip2-base-patch16-224-v3"
 VALID_BACKENDS = {"cpu", "cuda", "intel_gpu"}
+VALID_FLAGS = {
+    "1": True,
+    "true": True,
+    "yes": True,
+    "on": True,
+    "0": False,
+    "false": False,
+    "no": False,
+    "off": False,
+}
 
 
 def _positive_int(name: str, default: int) -> int:
@@ -19,11 +29,22 @@ def _positive_int(name: str, default: int) -> int:
     return value
 
 
+def _bool_flag(name: str, default: bool) -> bool:
+    raw = os.getenv(name)
+    if raw is None or not raw.strip():
+        return default
+    value = VALID_FLAGS.get(raw.strip().lower())
+    if value is None:
+        raise ValueError(f"{name} must be one of {sorted(VALID_FLAGS)}")
+    return value
+
+
 @dataclass(frozen=True)
 class Settings:
     model_path: Path
     embedding_space_id: str
     backend: str
+    text_tower_enabled: bool
     cpu_concurrency: int
     max_image_bytes: int
     max_request_bytes: int
@@ -46,6 +67,7 @@ class Settings:
             model_path=MODEL_PATH,
             embedding_space_id=EMBEDDING_SPACE_ID,
             backend=backend,
+            text_tower_enabled=_bool_flag("TEXT_TOWER_ENABLED", True),
             cpu_concurrency=_positive_int("CPU_CONCURRENCY", 1),
             max_image_bytes=max_image_bytes,
             max_request_bytes=max_request_bytes,

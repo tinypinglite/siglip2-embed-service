@@ -26,6 +26,10 @@ class InputError(ValueError):
     """The caller supplied an image that cannot be processed safely."""
 
 
+class TextEmbeddingDisabledError(RuntimeError):
+    """The deployment turned the text tower off."""
+
+
 class Backend(Protocol):
     def embed_images(self, pixels: list[np.ndarray]) -> np.ndarray: ...
 
@@ -45,12 +49,17 @@ def _normalize(vectors: np.ndarray) -> np.ndarray:
 
 
 class _BaseBackend:
-    def __init__(self, model_path: Path) -> None:
+    def __init__(self, settings: Settings) -> None:
+        self.text_tower_enabled = settings.text_tower_enabled
         self.image_processor = AutoImageProcessor.from_pretrained(
-            model_path, local_files_only=True
+            settings.model_path, local_files_only=True
         )
-        self.tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)
-        config = AutoConfig.from_pretrained(model_path, local_files_only=True)
+        if not self.text_tower_enabled:
+            return
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            settings.model_path, local_files_only=True
+        )
+        config = AutoConfig.from_pretrained(settings.model_path, local_files_only=True)
         self.text_length = int(config.text_config.max_position_embeddings)
 
     def prepare_image(self, image: np.ndarray) -> np.ndarray:
@@ -96,13 +105,15 @@ class OnnxBackend(_BaseBackend):
         if provider not in ort.get_available_providers():
             raise RuntimeError(f"required ONNX Runtime provider is unavailable: {provider}")
 
-        super().__init__(settings.model_path)
+        super().__init__(settings)
         self.provider = provider
         self.image_session = self._load_session(
             ort, settings.model_path / "image_encoder.onnx"
         )
-        self.text_session = self._load_session(
-            ort, settings.model_path / "text_encoder.onnx"
+        self.text_session = (
+            self._load_session(ort, settings.model_path / "text_encoder.onnx")
+            if settings.text_tower_enabled
+            else None
         )
         input_type = self.image_session.get_inputs()[0].type
         self.image_dtype = np.float16 if input_type == "tensor(float16)" else np.float32
@@ -149,10 +160,12 @@ class OpenVinoBackend(_BaseBackend):
         except ImportError as error:
             raise RuntimeError("OpenVINO is unavailable in this image") from error
 
-        super().__init__(settings.model_path)
+        super().__init__(settings)
         image_path = settings.model_path / "image_encoder.xml"
         text_path = settings.model_path / "text_encoder.xml"
-        if not image_path.is_file() or not text_path.is_file():
+        if not image_path.is_file() or (
+            settings.text_tower_enabled and not text_path.is_file()
+        ):
             raise RuntimeError("missing bundled OpenVINO model")
 
         core = ov.Core()
@@ -166,7 +179,11 @@ class OpenVinoBackend(_BaseBackend):
 
         try:
             self.image_compiled = core.compile_model(str(image_path), "GPU")
-            self.text_compiled = core.compile_model(str(text_path), "GPU")
+            self.text_compiled = (
+                core.compile_model(str(text_path), "GPU")
+                if settings.text_tower_enabled
+                else None
+            )
         except Exception as error:
             raise RuntimeError(
                 "OpenVINO GPU compilation failed; the Intel iGPU or its driver "
@@ -179,10 +196,11 @@ class OpenVinoBackend(_BaseBackend):
             core.get_property("GPU", "DEVICE_ARCHITECTURE"),
         )
         self.image_request = self.image_compiled.create_infer_request()
-        self.text_request = self.text_compiled.create_infer_request()
         self.image_input = self.image_compiled.input(0)
-        self.text_input_ids = self.text_compiled.input(0)
-        self.text_attention_mask = self.text_compiled.input(1)
+        if self.text_compiled is not None:
+            self.text_request = self.text_compiled.create_infer_request()
+            self.text_input_ids = self.text_compiled.input(0)
+            self.text_attention_mask = self.text_compiled.input(1)
 
     def embed_images(self, pixels: list[np.ndarray]) -> np.ndarray:
         vectors: list[np.ndarray] = []
@@ -244,10 +262,23 @@ class EmbeddingService:
         return np.concatenate([vectors[index] for index in range(len(payloads))])
 
     def embed_texts(self, texts: list[str]) -> np.ndarray:
+        if not self.settings.text_tower_enabled:
+            raise TextEmbeddingDisabledError(
+                "text embedding is disabled because the text tower is turned off"
+            )
         with self._text_prepare_lock:
             tokens = self.backend.prepare_texts(texts)
         with self._inference_lock:
             return self.backend.embed_texts(tokens)
+
+    def probe_dimension(self) -> int:
+        """Measure the embedding dimension through an enabled tower."""
+        if self.settings.text_tower_enabled:
+            return int(self.embed_texts(["probe"]).shape[1])
+        image = np.zeros((MODEL_IMAGE_SIZE, MODEL_IMAGE_SIZE, 3), dtype=np.uint8)
+        pixels = self.backend.prepare_image(image)
+        with self._inference_lock:
+            return int(self.backend.embed_images([pixels]).shape[1])
 
     def _prepare_one_image(self, payload: bytes) -> np.ndarray:
         image = _decode_image(payload, self.settings.max_image_pixels)
