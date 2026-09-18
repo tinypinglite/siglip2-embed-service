@@ -12,12 +12,13 @@
 
 | 变量 | 默认值 | 说明 |
 | --- | --- | --- |
-| `EMBEDDING_BACKEND` | 由镜像决定 | `cpu`、`cuda` 或 `intel_gpu`；`compose.yaml` 已按 profile 设置。 |
 | `CPU_CONCURRENCY` | `1` | 图片 CPU 预处理并发数。 |
 | `TEXT_TOWER_ENABLED` | `true` | 是否启用文本塔。设为 `false` 时不加载文本编码器与 tokenizer，只提供图片向量；`POST /v1/embed/texts` 返回 503，`GET /v1/embedding-space` 的维度探测改用图片，`modalities` 仍上报 `image` 和 `text` 以兼容既有客户端。 |
 | `MAX_IMAGE_PIXELS` | `40000000` | 源图片像素准入上限。 |
 | `MAX_IMAGE_BYTES` | `20000000` | 单张图片字节上限。 |
 | `MAX_REQUEST_BYTES` | `128000000` | 单个请求的总字节上限，不能小于 `MAX_IMAGE_BYTES`。 |
+
+服务启动时按镜像内实际安装的推理运行时自动选择后端：装有 onnxruntime 时使用 CUDA（可用时）或 CPU，装有 OpenVINO 时使用 Intel 核显。无需配置后端，历史版本中的 `EMBEDDING_BACKEND` 已废弃，设置后会被忽略。
 
 ## 镜像选择
 

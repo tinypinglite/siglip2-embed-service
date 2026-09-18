@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -228,23 +229,44 @@ class OpenVinoBackend(_BaseBackend):
         return _normalize(np.concatenate(vectors, axis=0))
 
 
-def load_backend(settings: Settings) -> Backend:
+def _has_module(name: str) -> bool:
+    return importlib.util.find_spec(name) is not None
+
+
+def detect_backend() -> str:
+    """Pick the backend from the runtime installed in this image."""
+    if _has_module("onnxruntime"):
+        import onnxruntime as ort
+
+        if "CUDAExecutionProvider" in ort.get_available_providers():
+            return "cuda"
+        return "cpu"
+    if _has_module("openvino"):
+        return "intel_gpu"
+    raise RuntimeError(
+        "no inference runtime is installed: this image must ship onnxruntime "
+        "or openvino"
+    )
+
+
+def load_backend(settings: Settings) -> tuple[str, Backend]:
     if not settings.model_path.is_dir():
         raise RuntimeError(f"bundled model directory does not exist: {settings.model_path}")
-    if settings.backend == "intel_gpu":
-        return OpenVinoBackend(settings)
+    backend = detect_backend()
+    if backend == "intel_gpu":
+        return backend, OpenVinoBackend(settings)
     provider = (
         "CUDAExecutionProvider"
-        if settings.backend == "cuda"
+        if backend == "cuda"
         else "CPUExecutionProvider"
     )
-    return OnnxBackend(settings, provider)
+    return backend, OnnxBackend(settings, provider)
 
 
 class EmbeddingService:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
-        self.backend = load_backend(settings)
+        self.backend_name, self.backend = load_backend(settings)
         self._cpu_pool = ThreadPoolExecutor(max_workers=settings.cpu_concurrency)
         self._text_prepare_lock = Lock()
         self._inference_lock = Lock()

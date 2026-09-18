@@ -1,3 +1,4 @@
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
 from pathlib import Path
@@ -195,6 +196,51 @@ def test_settings_accept_common_8k_source_images_by_default(
 
     assert settings.max_image_pixels == 40_000_000
     assert settings.max_image_pixels >= 8192 * 4096
+
+
+def _fake_onnxruntime(providers: list[str]) -> SimpleNamespace:
+    return SimpleNamespace(get_available_providers=lambda: providers)
+
+
+def test_detect_backend_prefers_cuda_when_onnxruntime_exposes_cuda(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setitem(
+        sys.modules,
+        "onnxruntime",
+        _fake_onnxruntime(["CUDAExecutionProvider", "CPUExecutionProvider"]),
+    )
+    monkeypatch.setattr(runtime, "_has_module", lambda name: name == "onnxruntime")
+
+    assert runtime.detect_backend() == "cuda"
+
+
+def test_detect_backend_falls_back_to_cpu_without_a_cuda_provider(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setitem(
+        sys.modules, "onnxruntime", _fake_onnxruntime(["CPUExecutionProvider"])
+    )
+    monkeypatch.setattr(runtime, "_has_module", lambda name: name == "onnxruntime")
+
+    assert runtime.detect_backend() == "cpu"
+
+
+def test_detect_backend_uses_openvino_when_onnxruntime_is_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(runtime, "_has_module", lambda name: name == "openvino")
+
+    assert runtime.detect_backend() == "intel_gpu"
+
+
+def test_detect_backend_rejects_an_image_without_any_runtime(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(runtime, "_has_module", lambda name: False)
+
+    with pytest.raises(RuntimeError, match="onnxruntime"):
+        runtime.detect_backend()
 
 
 def test_decode_image_accepts_source_at_pixel_limit() -> None:

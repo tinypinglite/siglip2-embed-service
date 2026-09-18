@@ -45,9 +45,10 @@ app = FastAPI(title="SigLIP2 Embed Service", lifespan=lifespan)
 @app.get("/healthz")
 def healthz(request: Request) -> dict[str, str]:
     settings: Settings = request.app.state.settings
+    service: EmbeddingService = request.app.state.service
     return {
         "status": "ok",
-        "backend": settings.backend,
+        "backend": service.backend_name,
         "text_tower": "enabled" if settings.text_tower_enabled else "disabled",
     }
 

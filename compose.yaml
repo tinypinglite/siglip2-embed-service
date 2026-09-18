@@ -6,7 +6,6 @@ services:
     ports:
       - "${PORT:-8080}:8080"
     environment:
-      EMBEDDING_BACKEND: cpu
       CPU_CONCURRENCY: "${CPU_CONCURRENCY:-1}"
       TEXT_TOWER_ENABLED: "${TEXT_TOWER_ENABLED:-true}"
     networks:
@@ -24,7 +23,6 @@ services:
     ports:
       - "${PORT:-8080}:8080"
     environment:
-      EMBEDDING_BACKEND: intel_gpu
       CPU_CONCURRENCY: "${CPU_CONCURRENCY:-1}"
       TEXT_TOWER_ENABLED: "${TEXT_TOWER_ENABLED:-true}"
     networks:
@@ -39,7 +37,6 @@ services:
     ports:
       - "${PORT:-8080}:8080"
     environment:
-      EMBEDDING_BACKEND: cuda
       CPU_CONCURRENCY: "${CPU_CONCURRENCY:-1}"
       TEXT_TOWER_ENABLED: "${TEXT_TOWER_ENABLED:-true}"
     networks:

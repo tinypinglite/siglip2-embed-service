@@ -9,7 +9,6 @@ from pathlib import Path
 
 MODEL_PATH = Path("/opt/siglip2")
 EMBEDDING_SPACE_ID = "siglip2-base-patch16-224-v3"
-VALID_BACKENDS = {"cpu", "cuda", "intel_gpu"}
 VALID_FLAGS = {
     "1": True,
     "true": True,
@@ -43,7 +42,6 @@ def _bool_flag(name: str, default: bool) -> bool:
 class Settings:
     model_path: Path
     embedding_space_id: str
-    backend: str
     text_tower_enabled: bool
     cpu_concurrency: int
     max_image_bytes: int
@@ -52,12 +50,6 @@ class Settings:
 
     @classmethod
     def from_env(cls) -> "Settings":
-        backend = os.getenv("EMBEDDING_BACKEND", "cpu")
-        if backend not in VALID_BACKENDS:
-            raise ValueError(
-                f"EMBEDDING_BACKEND must be one of {sorted(VALID_BACKENDS)}"
-            )
-
         max_image_bytes = _positive_int("MAX_IMAGE_BYTES", 20_000_000)
         max_request_bytes = _positive_int("MAX_REQUEST_BYTES", 128_000_000)
         if max_request_bytes < max_image_bytes:
@@ -66,7 +58,6 @@ class Settings:
         return cls(
             model_path=MODEL_PATH,
             embedding_space_id=EMBEDDING_SPACE_ID,
-            backend=backend,
             text_tower_enabled=_bool_flag("TEXT_TOWER_ENABLED", True),
             cpu_concurrency=_positive_int("CPU_CONCURRENCY", 1),
             max_image_bytes=max_image_bytes,
