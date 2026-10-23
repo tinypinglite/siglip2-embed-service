@@ -29,3 +29,9 @@
 | `tinyping/siglip2-embed-service:cuda` | Linux amd64 | NVIDIA 显卡。使用 CUDA，需要 NVIDIA Container Toolkit。 |
 
 `intel` 镜像不会回退到 CPU：核显或驱动不受支持时（例如 HD 400（Braswell）及更早的核显、AMD 核显、未传入 `/dev/dri`），服务会直接启动失败并在日志中说明原因，此时请改用 `cpu` 镜像。
+
+## License
+
+本项目采用 [PolyForm Noncommercial License 1.0.0](./LICENSE)，仅允许非商业用途。
+
+Copyright (C) 2026 tinypinglite
