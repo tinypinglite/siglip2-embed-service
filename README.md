@@ -1,37 +1,39 @@
 # SakuraMedia SigLIP2 Embedding Service
 
-为 SakuraMedia 图片搜索提供 SigLIP2 图像与文本 embedding。镜像内已包含预先导出的模型和运行时：启动时不下载模型、不挂载模型目录，也不包含 PyTorch。
+[简体中文](./README.zh-CN.md) | English
 
-服务固定使用 `siglip2-base-patch16-224-v3` 向量空间，返回 L2 归一化的 768 维向量。请勿试图替换模型文件；更换模型或向量空间后，SakuraMedia 中已有的图片搜索索引不能继续混用。
+Provides SigLIP2 image and text embeddings for SakuraMedia image search. The image bundles pre-exported models and runtimes: it does not download models at startup, mount a model directory, or include PyTorch.
 
-图片接口接受静态 WebP 与 JPEG（`.jpg`/`.jpeg`），按文件内容识别，不依赖上传文件名。服务默认允许最高 4000 万像素的源图片，覆盖常见的 8K 横向图片；这是防止异常图片耗尽内存的准入上限，不是模型输入尺寸。libwebp 会在解码阶段直接输出模型需要的 224×224 RGB。JPEG 则先由 libjpeg-turbo 在解码阶段按 DCT 缩小到最多 100 万 RGB 像素，再缩放为 224×224，因此不会在内存中展开完整大图。
+The service is fixed to the `siglip2-base-patch16-224-v3` embedding space and returns L2-normalized 768-dimensional vectors. Do not try to replace the model files. After changing the model or embedding space, existing image search indexes in SakuraMedia cannot be mixed with the new embeddings.
 
-渐进式 JPEG 需要解码器保留整张图的系数，不能像基线 JPEG 一样完全按行流式处理；为保持内存边界，服务支持最多 1000 万源像素、32 个扫描的渐进式 JPEG。这个额外上限只影响渐进式 JPEG，不影响基线 JPEG、WebP 或 `MAX_IMAGE_PIXELS` 的 4000 万像素准入上限。图片 CPU 预处理并发数由 `CPU_CONCURRENCY` 控制，默认值为 1。可通过 `MAX_IMAGE_PIXELS` 调整通用源图片准入上限。
+The image endpoint accepts static WebP and JPEG (`.jpg`/`.jpeg`) and detects the format from file contents rather than the uploaded filename. By default, the service accepts source images up to 40 megapixels, covering common 8K landscape images. This is an admission limit that prevents abnormal images from exhausting memory; it is not the model input size. libwebp outputs the 224×224 RGB data required by the model directly during decoding. JPEG is first downscaled by libjpeg-turbo during DCT decoding to at most 1 million RGB pixels, then resized to 224×224, so the full-size image is never expanded in memory.
 
-## 环境变量
+Progressive JPEG requires the decoder to retain coefficients for the entire image, so it cannot be fully streamed row by row like baseline JPEG. To keep memory bounded, the service supports progressive JPEGs up to 10 megapixels with 32 scans. This additional limit applies only to progressive JPEGs and does not affect baseline JPEG, WebP, or the 40-megapixel `MAX_IMAGE_PIXELS` admission limit. Image CPU preprocessing concurrency is controlled by `CPU_CONCURRENCY` and defaults to 1. The general source-image admission limit can be adjusted with `MAX_IMAGE_PIXELS`.
 
-| 变量 | 默认值 | 说明 |
+## Environment variables
+
+| Variable | Default | Description |
 | --- | --- | --- |
-| `CPU_CONCURRENCY` | `1` | 图片 CPU 预处理并发数。 |
-| `TEXT_TOWER_ENABLED` | `true` | 是否启用文本塔。设为 `false` 时不加载文本编码器与 tokenizer，只提供图片向量；`POST /v1/embed/texts` 返回 503，`GET /v1/embedding-space` 的维度探测改用图片，`modalities` 仍上报 `image` 和 `text` 以兼容既有客户端。 |
-| `MAX_IMAGE_PIXELS` | `40000000` | 源图片像素准入上限。 |
-| `MAX_IMAGE_BYTES` | `20000000` | 单张图片字节上限。 |
-| `MAX_REQUEST_BYTES` | `128000000` | 单个请求的总字节上限，不能小于 `MAX_IMAGE_BYTES`。 |
+| `CPU_CONCURRENCY` | `1` | Number of concurrent image CPU preprocessing workers. |
+| `TEXT_TOWER_ENABLED` | `true` | Whether the text tower is enabled. When set to `false`, the text encoder and tokenizer are not loaded and only image embeddings are provided; `POST /v1/embed/texts` returns 503, the dimension probe in `GET /v1/embedding-space` switches to images, and `modalities` still reports `image` and `text` for compatibility with existing clients. |
+| `MAX_IMAGE_PIXELS` | `40000000` | Source image pixel admission limit. |
+| `MAX_IMAGE_BYTES` | `20000000` | Per-image byte limit. |
+| `MAX_REQUEST_BYTES` | `128000000` | Total request byte limit; must not be less than `MAX_IMAGE_BYTES`. |
 
-服务启动时按镜像内实际安装的推理运行时自动选择后端：装有 onnxruntime 时使用 CUDA（可用时）或 CPU，装有 OpenVINO 时使用 Intel 核显。无需配置后端，历史版本中的 `EMBEDDING_BACKEND` 已废弃，设置后会被忽略。
+At startup, the service automatically selects a backend based on the inference runtime actually installed in the image: with onnxruntime, it uses CUDA when available or CPU; with OpenVINO, it uses an Intel integrated GPU. No backend configuration is needed. `EMBEDDING_BACKEND` from older versions is deprecated and ignored if set.
 
-## 镜像选择
+## Image variants
 
-| 镜像 | 平台 | 用途 |
+| Image | Platform | Purpose |
 | --- | --- | --- |
-| `tinyping/siglip2-embed-service:cpu` | Linux amd64、arm64 | 纯 CPU。适用于 AMD CPU、Intel CPU 和 ARM64 设备。 |
-| `tinyping/siglip2-embed-service:intel` | Linux amd64 | Intel 核显。使用 OpenVINO，需将 `/dev/dri` 传入容器。支持 Gen9 及以上的 Intel 核显（HD 500/600、UHD 600/605、UHD、Iris Xe、Arc 等，覆盖 Apollo Lake、Gemini Lake、Jasper Lake、Alder Lake-N 与 Twin Lake）。 |
-| `tinyping/siglip2-embed-service:cuda` | Linux amd64 | NVIDIA 显卡。使用 CUDA，需要 NVIDIA Container Toolkit。 |
+| `tinyping/siglip2-embed-service:cpu` | Linux amd64, arm64 | CPU only. Suitable for AMD CPUs, Intel CPUs, and ARM64 devices. |
+| `tinyping/siglip2-embed-service:intel` | Linux amd64 | Intel integrated GPU. Uses OpenVINO and requires `/dev/dri` to be passed into the container. Supports Gen9 and newer Intel integrated GPUs (HD 500/600, UHD 600/605, UHD, Iris Xe, Arc, etc., covering Apollo Lake, Gemini Lake, Jasper Lake, Alder Lake-N, and Twin Lake). |
+| `tinyping/siglip2-embed-service:cuda` | Linux amd64 | NVIDIA GPUs. Uses CUDA and requires the NVIDIA Container Toolkit. |
 
-`intel` 镜像不会回退到 CPU：核显或驱动不受支持时（例如 HD 400（Braswell）及更早的核显、AMD 核显、未传入 `/dev/dri`），服务会直接启动失败并在日志中说明原因，此时请改用 `cpu` 镜像。
+The `intel` image does not fall back to CPU: if the integrated GPU or driver is unsupported (for example, HD 400 (Braswell) and older integrated GPUs, AMD integrated GPUs, or `/dev/dri` not being passed in), the service fails to start and explains why in the logs; use the `cpu` image instead.
 
 ## License
 
-本项目采用 [PolyForm Noncommercial License 1.0.0](./LICENSE)，仅允许非商业用途。
+This project is licensed under the [PolyForm Noncommercial License 1.0.0](./LICENSE); non-commercial use only.
 
 Copyright (C) 2026 tinypinglite
